@@ -1,0 +1,222 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		FA4DC0281835B6D500F52BB1 /* GlowingTeapots.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA4DC0271835B6D500F52BB1 /* GlowingTeapots.cpp */; };
+		FA4DC02A1835B6D500F52BB1 /* GlowingTeapots.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = FA4DC0291835B6D500F52BB1 /* GlowingTeapots.1 */; };
+		FA4DC0311835B6E900F52BB1 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA4DC0301835B6E900F52BB1 /* OpenGL.framework */; };
+		FA4DC0331835B6ED00F52BB1 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA4DC0321835B6ED00F52BB1 /* GLUT.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		FA4DC0211835B6D500F52BB1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				FA4DC02A1835B6D500F52BB1 /* GlowingTeapots.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		FA4DC0231835B6D500F52BB1 /* GlowingTeapots */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GlowingTeapots; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA4DC0271835B6D500F52BB1 /* GlowingTeapots.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = GlowingTeapots.cpp; sourceTree = "<group>"; };
+		FA4DC0291835B6D500F52BB1 /* GlowingTeapots.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = GlowingTeapots.1; sourceTree = "<group>"; };
+		FA4DC0301835B6E900F52BB1 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		FA4DC0321835B6ED00F52BB1 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FA4DC0201835B6D500F52BB1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA4DC0331835B6ED00F52BB1 /* GLUT.framework in Frameworks */,
+				FA4DC0311835B6E900F52BB1 /* OpenGL.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		FA4DC0181835B6D500F52BB1 = {
+			isa = PBXGroup;
+			children = (
+				FA4DC0321835B6ED00F52BB1 /* GLUT.framework */,
+				FA4DC0301835B6E900F52BB1 /* OpenGL.framework */,
+				FA4DC0261835B6D500F52BB1 /* GlowingTeapots */,
+				FA4DC0241835B6D500F52BB1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FA4DC0241835B6D500F52BB1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FA4DC0231835B6D500F52BB1 /* GlowingTeapots */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FA4DC0261835B6D500F52BB1 /* GlowingTeapots */ = {
+			isa = PBXGroup;
+			children = (
+				FA4DC0271835B6D500F52BB1 /* GlowingTeapots.cpp */,
+				FA4DC0291835B6D500F52BB1 /* GlowingTeapots.1 */,
+			);
+			path = GlowingTeapots;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		FA4DC0221835B6D500F52BB1 /* GlowingTeapots */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FA4DC02D1835B6D500F52BB1 /* Build configuration list for PBXNativeTarget "GlowingTeapots" */;
+			buildPhases = (
+				FA4DC01F1835B6D500F52BB1 /* Sources */,
+				FA4DC0201835B6D500F52BB1 /* Frameworks */,
+				FA4DC0211835B6D500F52BB1 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GlowingTeapots;
+			productName = GlowingTeapots;
+			productReference = FA4DC0231835B6D500F52BB1 /* GlowingTeapots */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FA4DC01A1835B6D500F52BB1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0440;
+				ORGANIZATIONNAME = "Shahzore Qureshi";
+			};
+			buildConfigurationList = FA4DC01D1835B6D500F52BB1 /* Build configuration list for PBXProject "GlowingTeapots" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = FA4DC0181835B6D500F52BB1;
+			productRefGroup = FA4DC0241835B6D500F52BB1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FA4DC0221835B6D500F52BB1 /* GlowingTeapots */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		FA4DC01F1835B6D500F52BB1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA4DC0281835B6D500F52BB1 /* GlowingTeapots.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		FA4DC02B1835B6D500F52BB1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		FA4DC02C1835B6D500F52BB1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		FA4DC02E1835B6D500F52BB1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		FA4DC02F1835B6D500F52BB1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		FA4DC01D1835B6D500F52BB1 /* Build configuration list for PBXProject "GlowingTeapots" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA4DC02B1835B6D500F52BB1 /* Debug */,
+				FA4DC02C1835B6D500F52BB1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FA4DC02D1835B6D500F52BB1 /* Build configuration list for PBXNativeTarget "GlowingTeapots" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA4DC02E1835B6D500F52BB1 /* Debug */,
+				FA4DC02F1835B6D500F52BB1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = FA4DC01A1835B6D500F52BB1 /* Project object */;
+}
