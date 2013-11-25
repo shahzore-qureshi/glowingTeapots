@@ -27,6 +27,7 @@
 #endif
 
 #define PI 3.14159265
+#define TAU 6.2831853
 
 #define X 0
 #define Y 1
@@ -39,7 +40,7 @@
 using namespace std;
 
 // Globals.
-static float spotAngle = 70.0; // Spotlight cone half-angle.
+static float spotAngle = 40.0; // Spotlight cone half-angle.
 static float xMove = 0.0, zMove = 9.0; // Movement components.
 static float spotExponent = 2.0; // Spotlight exponent = attenuation.
 static float colorsForTeapots[27]; // Random colors for teapots.
@@ -60,7 +61,7 @@ void setup(void)
     // Light property vectors.
     float lightAmb[] = { 0.0, 0.0, 0.0, 1.0 };
     float lightDifAndSpec[] = { 1.0, 1.0, 1.0, 1.0 };
-    float globAmb[] = { 1.0, 1.0, 1.0, 1.0 };
+    float globAmb[] = { 0.09, 0.09, 0.09, 1.0 };
     
     // Light properties.
     glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmb);
@@ -72,7 +73,7 @@ void setup(void)
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // Enable local viewpoint.
     
     // Material property vectors.
-    float matSpec[] = { 0.09, 0.09, 0.09, 1.0 };
+    float matSpec[] = { 0.5, 0.5, 0.5, 1.0 };
     float matShine[] = { 90.0 };
     
     // Material properties shared by all the spheres.
@@ -163,15 +164,13 @@ void drawScene()
     player_last[Y] = player_vel[Y];
     player_last[Z] = player_vel[Z];
     
-    
-    
     //Change player position.
     player_pos[X] += 0.3 * player_vel[X];
     player_pos[Y] += 0.3 * player_vel[Y];
     player_pos[Z] += 0.3 * player_vel[Z];
     
     //Change light position based on user controls.
-    float lightPos[] = { 0, 3.0, 0 - 6.0f, 1.0}; // Spotlight position.
+    float lightPos[] = {-player_pos[X], 3.0, -player_pos[Z], 1.0}; // Spotlight position.
     
     //Always point the light downwards.
     float spotDirection[] = {0.0, -1.0, 0.0}; // Spotlight direction.
@@ -344,6 +343,18 @@ void specialKeyInput(int key, int x, int y)
     glutPostRedisplay();
 }
 
+void mouseInput(int key, int state, int x, int y)
+{
+    cout << "X: " << x << endl;
+        player_rot[Y] += x * -0.01;
+        if (player_rot[Y] >= TAU)
+            player_rot[Y] -= TAU;
+        if (player_rot[Y] < 0)
+            player_rot[Y] += TAU;
+    
+    glutPostRedisplay();
+}
+
 // Routine to output interaction instructions to the C++ window.
 void printInteraction(void)
 {
@@ -366,6 +377,7 @@ int main(int argc, char **argv)
     glutKeyboardFunc(keyInputDown);
     glutKeyboardUpFunc(keyInputUp);
     glutSpecialFunc(specialKeyInput);
+    glutMouseFunc(mouseInput);
     glutMainLoop();
     
     return 0;
