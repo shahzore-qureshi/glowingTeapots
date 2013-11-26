@@ -105,26 +105,38 @@ void drawScene()
     
     char moved = 0; // did the player try to move?
     if (player_dir & DIR_FORWARD) {
-        player_vel[X] += sin(player_rot[Y]); //Use unit circle and direction to determine velocity.
-        player_vel[Z] += cos(player_rot[Y]);
-        moved = 1;
+        if (player_pos[Z] < 5.0f)
+        {
+            //Use unit circle and direction to determine velocity.
+            player_vel[X] += sin(player_rot[Y]);
+            player_vel[Z] += cos(player_rot[Y]);
+            moved = 1;
+        }
     }
     if (player_dir & DIR_BACKWARD) {
-        player_vel[X] += -sin(player_rot[Y]);
-        player_vel[Z] += -cos(player_rot[Y]);
-        moved = 1;
+        if (player_pos[Z] > -5.0f)
+        {
+            player_vel[X] += -sin(player_rot[Y]);
+            player_vel[Z] += -cos(player_rot[Y]);
+            moved = 1;
+        }
     }
     if (player_dir & DIR_RIGHT) {
-        player_vel[X] += -cos(player_rot[Y]);
-        player_vel[Z] += sin(player_rot[Y]);
-        moved = 1;
+        if (player_pos[X] > -7.0f)
+        {
+            player_vel[X] += -cos(player_rot[Y]);
+            player_vel[Z] += sin(player_rot[Y]);
+            moved = 1;
+        }
     }
     if (player_dir & DIR_LEFT) {
-        player_vel[X] += cos(player_rot[Y]);
-        player_vel[Z] += -sin(player_rot[Y]);
-        moved = 1;
+        if (player_pos[X] < 7.0f)
+        {
+            player_vel[X] += cos(player_rot[Y]);
+            player_vel[Z] += -sin(player_rot[Y]);
+            moved = 1;
+        }
     }
-    
     
     //If there is velocity, increase until maximum velocity is reached.
     //Otherwise, decrease velocity when user is not moving anymore.
@@ -164,7 +176,7 @@ void drawScene()
     player_last[Y] = player_vel[Y];
     player_last[Z] = player_vel[Z];
     
-    //Change player position.
+    //Change player position.    
     player_pos[X] += 0.3 * player_vel[X];
     player_pos[Y] += 0.3 * player_vel[Y];
     player_pos[Z] += 0.3 * player_vel[Z];
@@ -180,18 +192,10 @@ void drawScene()
     glLoadIdentity();
     
     //Control camera using user input.
-    gluLookAt(-player_pos[X], 4.0, -player_pos[Z] + 6.0f, -player_pos[X], 0.0, -player_pos[Z] - 6.0f, 0.0, 1.0, 0.0);
+    gluLookAt(-player_pos[X], 4.0, -player_pos[Z] + 6.0f,
+              -player_pos[X], -player_pos[Y], -player_pos[Z] - 6.0f, 0.0, 1.0, 0.0);
     
     glPushMatrix();
-    
-    // Draw the spotlight cone in wireframe after disabling lighting
-//    glPushMatrix();
-//    glDisable(GL_LIGHTING);
-//    glRotatef(-90.0, 1.0, 0.0, 0.0);
-//    glColor3f(1.0, 1.0, 1.0);
-//    //glutWireCone(3.0 * tan( spotAngle/180.0 * PI ), 3.0, 20, 20);
-//    glEnable(GL_LIGHTING);
-//    glPopMatrix();
     
     // Spotlight properties including position.
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
@@ -343,16 +347,18 @@ void specialKeyInput(int key, int x, int y)
     glutPostRedisplay();
 }
 
-void mouseInput(int key, int state, int x, int y)
+void mouseInput(int x, int y)
 {
-    cout << "X: " << x << endl;
-        player_rot[Y] += x * -0.01;
+    if (x >= 0 && x <= 500 && y >= 0 && y <= 500)
+    {
+        cout << "X: " << x << ", Y: " << y << endl;
+        player_rot[Y] += x * -1.0;
         if (player_rot[Y] >= TAU)
             player_rot[Y] -= TAU;
         if (player_rot[Y] < 0)
             player_rot[Y] += TAU;
-    
-    glutPostRedisplay();
+        glutPostRedisplay();
+    }
 }
 
 // Routine to output interaction instructions to the C++ window.
@@ -376,8 +382,8 @@ int main(int argc, char **argv)
     glutReshapeFunc(resize);
     glutKeyboardFunc(keyInputDown);
     glutKeyboardUpFunc(keyInputUp);
-    glutSpecialFunc(specialKeyInput);
-    glutMouseFunc(mouseInput);
+    //glutSpecialFunc(specialKeyInput);
+    //glutPassiveMotionFunc(mouseInput);
     glutMainLoop();
     
     return 0;
