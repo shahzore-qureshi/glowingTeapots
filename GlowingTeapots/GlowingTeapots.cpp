@@ -49,6 +49,18 @@ static short player_dir = 0; // start off with no direction
 static float player_pos[] = {0, 0, 0}; // at origin
 static float player_rot[] = {0, 0, 0}; // without having rotated
 
+static int isThrowTeapotEnabled = 0; //boolean that determines whether to throw a teapot
+static int animationPeriod = 100; // Time interval between frames.
+
+static float thrownTeapotX = 0.0; //X coordinate of thrown teapot.
+static float thrownTeapotY = 1.0; //Y coordinate of thrown teapot.
+static float thrownTeapotZ = 0.0; //Z coordinate of thrown teapot.
+static float timeForThrow = 0; //Time used to calculate teapot throw.
+static float horizontalVelocity = 1.8; // Horizontal component of initial velocity.
+static float verticalVelocity = 1.0; // Vertical component of initial velocity.
+static float gravityAcceleration = 0.2;  // Gravitational accelaration.
+static int isBreakTeapotEnabled = 0; //boolean that determines whether to break a teapot
+
 // Initialization routine.
 void setup(void)
 {
@@ -61,7 +73,7 @@ void setup(void)
     // Light property vectors.
     float lightAmb[] = { 0.0, 0.0, 0.0, 1.0 };
     float lightDifAndSpec[] = { 1.0, 1.0, 1.0, 1.0 };
-    float globAmb[] = { 0.09, 0.09, 0.09, 1.0 };
+    float globAmb[] = { 0.69, 0.69, 0.69, 1.0 };    ///adsadsadsadsadsad CHANGE BACK !!!!!!
     
     // Light properties.
     glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmb);
@@ -89,10 +101,110 @@ void setup(void)
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
     
-    // Define random colors for teapots.
+    // Define random colors for teapots. Only do this once.
     srand (static_cast <unsigned> (time(0)));
     for (int count = 0; count < 27; count++)
         colorsForTeapots[count] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) + 0.1;
+}
+
+// Timer function.
+void animate(int value)
+{
+    if (isThrowTeapotEnabled)
+    {
+        timeForThrow += 0.6;
+        cout << "time: " << timeForThrow << endl;
+        
+    }
+    else if (timeForThrow != 0)
+        timeForThrow = 0;
+    
+    glutTimerFunc(animationPeriod, animate, 1);
+    glutPostRedisplay();
+}
+
+void drawTeapots()
+{
+    int distance = 5;
+    int count = 0;
+    for (int z = distance; z >= -distance; z = z - distance)
+        for (int x = -distance; x <= distance; x = x + distance)
+        {
+            glPushMatrix();
+            glColor4f(colorsForTeapots[count], colorsForTeapots[count + 1], colorsForTeapots[count + 2], 1.0);
+            
+            if (isThrowTeapotEnabled && x == 0 && z == distance)
+            {
+                
+                if (thrownTeapotY < 0.5)
+                {
+                    //Break teapot.
+                    //This is temp. Change it.
+                    isThrowTeapotEnabled = 0;
+                }
+                else
+                {
+                    //Apply throwing equations of motion to transform sphere.
+                    thrownTeapotY = 0.5 + verticalVelocity * timeForThrow - (gravityAcceleration/2.0) * timeForThrow * timeForThrow;
+                    thrownTeapotZ = z - horizontalVelocity * timeForThrow;
+                    glTranslatef(x, thrownTeapotY, thrownTeapotZ);
+                    glutSolidTeapot(0.5);
+                }
+            }
+            else
+            {
+                glTranslatef(x, 0.5, z); //Draw teapot at regular location.
+                glutSolidTeapot(0.5);
+            }
+            
+            glPopMatrix();
+            count = count + 2;
+        }
+}
+
+void drawReflectedTeapots()
+{
+    int distance = 5;
+    int count = 0;
+    for (int z = distance; z >= -distance; z = z - distance)
+        for (int x = -distance; x <= distance; x = x + distance)
+        {
+            glPushMatrix();
+            
+            //Draw reflection on ground.
+            glScalef(1.0, -0.4, 1.0);
+            glFrontFace(GL_CW); // Because of reflection front-faces are drawn clockwise.
+            glPushMatrix();
+            
+            if (isThrowTeapotEnabled && x == 0 && z == distance)
+            {
+                // Apply equations of motion to transform sphere.
+                float y = 0.5 + verticalVelocity * timeForThrow - (gravityAcceleration/2.0) * timeForThrow * timeForThrow;
+                // Apply equations of motion to transform sphere.
+                glTranslatef(x, y, z - horizontalVelocity * timeForThrow);
+                
+                if (y < 0.5)
+                    isThrowTeapotEnabled = 0;
+            }
+            else
+                glTranslatef(x, 0.5, z);
+            
+            glColor4f(colorsForTeapots[count], colorsForTeapots[count + 1], colorsForTeapots[count + 2], 1.0);
+            glutSolidTeapot(0.5);
+            glPopMatrix();
+            glFrontFace(GL_CCW);
+            
+            //Draw reflection on back wall.
+//            glPushMatrix();
+//            glTranslatef(x, 0.5, z - distance * 3);
+//            glColor4f(colorsForTeapots[count], colorsForTeapots[count + 1], colorsForTeapots[count + 2], 1.0);
+//            glutSolidTeapot(0.5);
+//            glPopMatrix();
+            
+            
+            glPopMatrix();
+            count = count + 2;
+        }
 }
 
 // Drawing routine.
@@ -205,19 +317,9 @@ void drawScene()
     
     glPopMatrix();
     
-    // Draw teapots. 
-    int distance = 3;
-    int count = 0;
-    for (int z = distance; z >= -distance; z = z - distance)
-        for (int x = -distance; x <= distance; x = x + distance)
-        {
-            glPushMatrix();
-            glTranslatef(x, 1.0, z);
-            glColor4f(colorsForTeapots[count], colorsForTeapots[count + 1], colorsForTeapots[count + 2], 1.0);
-            glutSolidTeapot(0.5);
-            glPopMatrix();
-            count = count + 2;
-        }
+    drawReflectedTeapots();
+    
+    drawTeapots();
     
     glutSwapBuffers();
 }
@@ -236,30 +338,6 @@ void resize (int w, int h)
 // Keyboard down input processing routine.
 void keyInputDown(unsigned char key, int x, int y)
 {
-//    switch (key)
-//    {
-//        case 27:
-//            exit(0);
-//            break;
-//        case 't':
-//            spotExponent -= 2.0;
-//            glutPostRedisplay();
-//            break;
-//        case 'T':
-//            spotExponent += 2.0;
-//            glutPostRedisplay();
-//            break;
-//        case 'a':
-//            spotAngle -= 1.0;
-//            glutPostRedisplay();
-//            break;
-//        case 'A':
-//            spotAngle += 1.0;
-//            glutPostRedisplay();
-//            break;
-//        default:
-//            break;
-//    }
     
         if (key == 'W' || key == 'w') {
             player_dir &= ~DIR_BACKWARD;
@@ -280,30 +358,6 @@ void keyInputDown(unsigned char key, int x, int y)
 // Keyboard up input processing routine.
 void keyInputUp(unsigned char key, int x, int y)
 {
-    //    switch (key)
-    //    {
-    //        case 27:
-    //            exit(0);
-    //            break;
-    //        case 't':
-    //            spotExponent -= 2.0;
-    //            glutPostRedisplay();
-    //            break;
-    //        case 'T':
-    //            spotExponent += 2.0;
-    //            glutPostRedisplay();
-    //            break;
-    //        case 'a':
-    //            spotAngle -= 1.0;
-    //            glutPostRedisplay();
-    //            break;
-    //        case 'A':
-    //            spotAngle += 1.0;
-    //            glutPostRedisplay();
-    //            break;
-    //        default:
-    //            break;
-    //    }
 
         if (key == 'W' || key == 'w') {
             player_dir &= ~DIR_FORWARD;
@@ -315,6 +369,12 @@ void keyInputUp(unsigned char key, int x, int y)
             player_dir &= ~DIR_RIGHT;
         }
     
+        if (key == 't')
+        {
+            isThrowTeapotEnabled = 1;
+        }
+    
+    glutPostRedisplay();
 }
 
 // Callback routine for non-ASCII key entry.
@@ -365,7 +425,7 @@ void mouseInput(int x, int y)
 void printInteraction(void)
 {
     cout << "Interaction:" << endl;
-    cout << "Press the arrow keys to move the player." << endl;
+    cout << "Use WASD (W = up, A = left, S = down, D = right) to move the player." << endl;
 }
 
 // Main routine.
@@ -384,6 +444,7 @@ int main(int argc, char **argv)
     glutKeyboardUpFunc(keyInputUp);
     //glutSpecialFunc(specialKeyInput);
     //glutPassiveMotionFunc(mouseInput);
+    glutTimerFunc(5, animate, 1);
     glutMainLoop();
     
     return 0;
