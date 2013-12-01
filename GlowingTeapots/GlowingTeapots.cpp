@@ -1,16 +1,21 @@
 //////////////////////////////////////////////////////////////////////////////////////
 //
 // Shahzore Qureshi
-// November 19th, 2013
+// December 1st, 2013
 // CSC350 - Graphics
 // Final Project
 //
 // GlowingTeapots.cpp
 //
-// This program draws teapots in a 3D world that the
-// user can explore. Teapots reflect light correctly,
-// and the user can move around. When the user is near
-// a teapot, the teapot becomes brighter.
+// This program draws 9 teapots in a 3D room that the
+// user can explore. When a user walks up to a teapot,
+// the teapot will glow. Then, the user can throw the
+// teapot. Only one teapot can be thrown at any given
+// point in time.
+//
+// Interaction:
+// Use WASD (W = up, A = left, S = down, D = right) to move around the room.
+// Press t to throw the teapot that is in front of the user.
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
@@ -40,26 +45,27 @@
 using namespace std;
 
 // Globals.
-static float spotAngle = 40.0; // Spotlight cone half-angle.
-static float xMove = 0.0, zMove = 9.0; // Movement components.
-static float spotExponent = 2.0; // Spotlight exponent = attenuation.
-static float colorsForTeapots[27]; // Random colors for teapots.
+static float spotAngle = 70.0; //Spotlight cone half-angle.
+static float spotExponent = 2.0; //Spotlight exponent = attenuation.
+static float colorsForTeapots[27]; //Random colors for teapots.
 
-static short player_dir = 0; // start off with no direction
-static float player_pos[] = {0, 0, 0}; // at origin
-static float player_rot[] = {0, 0, 0}; // without having rotated
+static short player_dir = 0; //Direction that the player is facing.
+static float player_pos[] = {0, 0, 0}; //Position of the player in the room.
+static float player_rot[] = {0, 0, 0}; //Rotation of the player with respect to the Y-axis.
 
-static int isThrowTeapotEnabled = 0; //boolean that determines whether to throw a teapot
-static int animationPeriod = 100; // Time interval between frames.
+static int isThrowTeapotEnabled = 0; //Boolean that determines whether or not a teapot is being thrown.
+static int animationPeriod = 20; // Time interval between frames (used for teapot throwing animation).
 
-static float thrownTeapotX = 0.0; //X coordinate of thrown teapot.
-static float thrownTeapotY = 1.0; //Y coordinate of thrown teapot.
-static float thrownTeapotZ = 0.0; //Z coordinate of thrown teapot.
-static float timeForThrow = 0; //Time used to calculate teapot throw.
-static float horizontalVelocity = 1.8; // Horizontal component of initial velocity.
-static float verticalVelocity = 1.0; // Vertical component of initial velocity.
-static float gravityAcceleration = 0.2;  // Gravitational accelaration.
-static int isBreakTeapotEnabled = 0; //boolean that determines whether to break a teapot
+static float teapotToThrowX = 0.0; //X coordinate of teapot to be thrown. It should not change once the user initiates the throw.
+//static float teapotToThrowY = 1.0; //Y coordinate of teapot to be thrown. It should not change once the user initiates the throw.
+static float teapotToThrowZ = 5.0; //Z coordinate of teapot to be thrown. It should not change once the user initiates the throw.
+//static float thrownTeapotX = 0.0; //X coordinate of thrown teapot. This changes as the teapot flies across the room.
+static float thrownTeapotY = 1.0; //Y coordinate of thrown teapot. This changes as the teapot flies across the room.
+static float thrownTeapotZ = 5.0; //Z coordinate of thrown teapot. This changes as the teapot flies across the room.
+static float timeForThrow = 0; //Time used to calculate and render teapot throw via physics equations.
+static float horizontalVelocity = 1.8; // Horizontal component of teapot's initial velocity.
+static float verticalVelocity = 1.0; // Vertical component of teapot's initial velocity.
+static float gravityAcceleration = 0.2;  // Gravitational accelaration of the room.
 
 // Initialization routine.
 void setup(void)
@@ -73,7 +79,7 @@ void setup(void)
     // Light property vectors.
     float lightAmb[] = { 0.0, 0.0, 0.0, 1.0 };
     float lightDifAndSpec[] = { 1.0, 1.0, 1.0, 1.0 };
-    float globAmb[] = { 0.69, 0.69, 0.69, 1.0 };    ///adsadsadsadsadsad CHANGE BACK !!!!!!
+    float globAmb[] = { 0.09, 0.09, 0.09, 1.0 }; //Room should be dimly lit.
     
     // Light properties.
     glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmb);
@@ -101,55 +107,51 @@ void setup(void)
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
     
-    // Define random colors for teapots. Only do this once.
+    // Define random colors for teapots. Only define colors once.
     srand (static_cast <unsigned> (time(0)));
     for (int count = 0; count < 27; count++)
-        colorsForTeapots[count] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) + 0.1;
+        colorsForTeapots[count] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) + 0.4;
 }
 
 // Timer function.
 void animate(int value)
 {
-    if (isThrowTeapotEnabled)
-    {
-        timeForThrow += 0.6;
-        cout << "time: " << timeForThrow << endl;
-        
-    }
-    else if (timeForThrow != 0)
-        timeForThrow = 0;
+    //Increase time variable of physics equations
+    //at every animation frame. Stop doing so
+    //when the teapot lands.
+    if (isThrowTeapotEnabled) timeForThrow += 0.6;
+    else if (timeForThrow != 0) timeForThrow = 0;
     
     glutTimerFunc(animationPeriod, animate, 1);
     glutPostRedisplay();
 }
 
+//Draw teapots in a rectangular grid formation.
+//    [7 8 9]
+//    [4 5 6]
+//    [1 2 3]
+//     \   /
+//     <user>
 void drawTeapots()
 {
     int distance = 5;
-    int count = 0;
+    int count = 0; //Used to grab different colors from teapot color array.
     for (int z = distance; z >= -distance; z = z - distance)
         for (int x = -distance; x <= distance; x = x + distance)
         {
             glPushMatrix();
             glColor4f(colorsForTeapots[count], colorsForTeapots[count + 1], colorsForTeapots[count + 2], 1.0);
             
-            if (isThrowTeapotEnabled && x == 0 && z == distance)
+            //Draw teapot using throwing animation.
+            if (isThrowTeapotEnabled && x == teapotToThrowX && z == teapotToThrowZ)
             {
+                //Apply throwing equations of motion to transform teapot.
+                thrownTeapotY = 0.5 + verticalVelocity * timeForThrow - (gravityAcceleration/2.0) * timeForThrow * timeForThrow;
+                thrownTeapotZ = z - horizontalVelocity * timeForThrow;
+                glTranslatef(x, thrownTeapotY, thrownTeapotZ);
+                glutSolidTeapot(0.5);
                 
-                if (thrownTeapotY < 0.5)
-                {
-                    //Break teapot.
-                    //This is temp. Change it.
-                    isThrowTeapotEnabled = 0;
-                }
-                else
-                {
-                    //Apply throwing equations of motion to transform sphere.
-                    thrownTeapotY = 0.5 + verticalVelocity * timeForThrow - (gravityAcceleration/2.0) * timeForThrow * timeForThrow;
-                    thrownTeapotZ = z - horizontalVelocity * timeForThrow;
-                    glTranslatef(x, thrownTeapotY, thrownTeapotZ);
-                    glutSolidTeapot(0.5);
-                }
+                if (thrownTeapotY < 0.5) isThrowTeapotEnabled = 0;
             }
             else
             {
@@ -162,25 +164,30 @@ void drawTeapots()
         }
 }
 
+//Draw the reflections of each teapot.
 void drawReflectedTeapots()
 {
     int distance = 5;
     int count = 0;
+    
+    glFrontFace(GL_CW); //Because of reflection, front-faces are drawn clockwise.
+
     for (int z = distance; z >= -distance; z = z - distance)
         for (int x = -distance; x <= distance; x = x + distance)
-        {
-            glPushMatrix();
-            
+        {            
+            ////////////////////////////
             //Draw reflection on ground.
-            glScalef(1.0, -0.4, 1.0);
-            glFrontFace(GL_CW); // Because of reflection front-faces are drawn clockwise.
+            ////////////////////////////
+            
             glPushMatrix();
             
-            if (isThrowTeapotEnabled && x == 0 && z == distance)
+            glScalef(1.0, -0.4, 1.0);
+            glPushMatrix();
+            
+            if (isThrowTeapotEnabled && x == teapotToThrowX && z == teapotToThrowZ)
             {
-                // Apply equations of motion to transform sphere.
+                // Apply equations of motion to transform teapot.
                 float y = 0.5 + verticalVelocity * timeForThrow - (gravityAcceleration/2.0) * timeForThrow * timeForThrow;
-                // Apply equations of motion to transform sphere.
                 glTranslatef(x, y, z - horizontalVelocity * timeForThrow);
                 
                 if (y < 0.5)
@@ -192,30 +199,113 @@ void drawReflectedTeapots()
             glColor4f(colorsForTeapots[count], colorsForTeapots[count + 1], colorsForTeapots[count + 2], 1.0);
             glutSolidTeapot(0.5);
             glPopMatrix();
-            glFrontFace(GL_CCW);
-            
-            //Draw reflection on back wall.
-//            glPushMatrix();
-//            glTranslatef(x, 0.5, z - distance * 3);
-//            glColor4f(colorsForTeapots[count], colorsForTeapots[count + 1], colorsForTeapots[count + 2], 1.0);
-//            glutSolidTeapot(0.5);
-//            glPopMatrix();
-            
             
             glPopMatrix();
+            
+            //////////////////////////////
+            //Draw reflection on ceiling.
+            //////////////////////////////
+            
+            glPushMatrix();
+            
+            glScalef(1.0, 0.2, 1.0);
+            glPushMatrix();
+            
+            if (isThrowTeapotEnabled && x == teapotToThrowX && z == teapotToThrowZ)
+            {
+                // Apply equations of motion to transform teapot.
+                float y = 22.5 + verticalVelocity * timeForThrow - (gravityAcceleration/2.0) * timeForThrow * timeForThrow;
+                glTranslatef(x, y, z - horizontalVelocity * timeForThrow);
+                
+                if (y < 22.5)
+                    isThrowTeapotEnabled = 0;
+            }
+            else
+                glTranslatef(x, 22.5, z);
+            
+            glColor4f(colorsForTeapots[count], colorsForTeapots[count + 1], colorsForTeapots[count + 2], 1.0);
+            glutSolidTeapot(0.5);
+            glPopMatrix();
+            
+            glPopMatrix();
+            
+            /////////////////////////////////////////////////////
+            //Draw reflection of left-most teapots on left wall.
+            /////////////////////////////////////////////////////
+            
+            if (x == -distance)
+            {
+                glPushMatrix();
+                
+                glTranslatef(-15.0, 0.0, 0.0);
+                glScalef(-0.5, 1.0, 1.0);
+                glPushMatrix();
+                
+                if (isThrowTeapotEnabled && x == teapotToThrowX && z == teapotToThrowZ)
+                {
+                    // Apply equations of motion to transform teapot.
+                    float y = 0.5 + verticalVelocity * timeForThrow - (gravityAcceleration/2.0) * timeForThrow * timeForThrow;
+                    glTranslatef(x - 5.0, y, z - horizontalVelocity * timeForThrow);
+                    
+                    if (y < 0.5)
+                        isThrowTeapotEnabled = 0;
+                }
+                else
+                    glTranslatef(x - 5.0, 0.5, z);
+                
+                glColor4f(colorsForTeapots[count], colorsForTeapots[count + 1], colorsForTeapots[count + 2], 1.0);
+                glutSolidTeapot(0.5);
+                glPopMatrix();
+                
+                glPopMatrix();
+            }
+            
+            ///////////////////////////////////////////////////////
+            //Draw reflection of right-most teapots on right wall.
+            ///////////////////////////////////////////////////////
+            
+            if (x == distance)
+            {
+                glPushMatrix();
+                
+                glTranslatef(15.0, 0.0, 0.0);
+                glScalef(-0.5, 1.0, 1.0);
+                glPushMatrix();
+                
+                if (isThrowTeapotEnabled && x == teapotToThrowX && z == teapotToThrowZ)
+                {
+                    // Apply equations of motion to transform teapot.
+                    float y = 0.5 + verticalVelocity * timeForThrow - (gravityAcceleration/2.0) * timeForThrow * timeForThrow;
+                    glTranslatef(x + 5.0, y, z - horizontalVelocity * timeForThrow);
+                    
+                    if (y < 0.5)
+                        isThrowTeapotEnabled = 0;
+                }
+                else
+                    glTranslatef(x + 5.0, 0.5, z);
+                
+                glColor4f(colorsForTeapots[count], colorsForTeapots[count + 1], colorsForTeapots[count + 2], 1.0);
+                glutSolidTeapot(0.5);
+                glPopMatrix();
+                
+                glPopMatrix();
+            }
+            
             count = count + 2;
         }
+    
+    glFrontFace(GL_CCW); //Reverse front face rendering back to normal.
 }
 
 // Drawing routine.
 void drawScene()
 {
     //Determine player velocity and direction.
-    float player_vel[] = {0,0,0}; // the velocity this time around
-    static float player_speed = 0; // velocity magnitude
-    static float player_last[] = {0,0,0}; // the previous velocity
+    float player_vel[] = {0,0,0}; //The velocity this time around
+    static float player_speed = 0; //Velocity magnitude
+    static float player_last[] = {0,0,0}; //Previous velocity (from last frame)
     
-    char moved = 0; // did the player try to move?
+    char moved = 0; // Did the player try to move?
     if (player_dir & DIR_FORWARD) {
         if (player_pos[Z] < 5.0f)
         {
@@ -234,7 +324,7 @@ void drawScene()
         }
     }
     if (player_dir & DIR_RIGHT) {
-        if (player_pos[X] > -7.0f)
+        if (player_pos[X] > -5.0f)
         {
             player_vel[X] += -cos(player_rot[Y]);
             player_vel[Z] += sin(player_rot[Y]);
@@ -242,7 +332,7 @@ void drawScene()
         }
     }
     if (player_dir & DIR_LEFT) {
-        if (player_pos[X] < 7.0f)
+        if (player_pos[X] < 5.0f)
         {
             player_vel[X] += cos(player_rot[Y]);
             player_vel[Z] += -sin(player_rot[Y]);
@@ -250,8 +340,8 @@ void drawScene()
         }
     }
     
-    //If there is velocity, increase until maximum velocity is reached.
-    //Otherwise, decrease velocity when user is not moving anymore.
+    //If there is movement, increase speed until maximum velocity is reached.
+    //Otherwise, decrease velocity to an eventual halt.
     if (moved) {
         player_speed += 0.1;
     } else {
@@ -259,8 +349,6 @@ void drawScene()
         player_vel[X] = player_last[X];
         player_vel[Y] = player_last[Y];
         player_vel[Z] = player_last[Z];
-        
-        
     }
     if (player_speed > 1)
         player_speed = 1;
@@ -293,8 +381,16 @@ void drawScene()
     player_pos[Y] += 0.3 * player_vel[Y];
     player_pos[Z] += 0.3 * player_vel[Z];
     
-    //Change light position based on user controls.
-    float lightPos[] = {-player_pos[X], 3.0, -player_pos[Z], 1.0}; // Spotlight position.
+    //Change spotlight position based on user controls.
+    float lightPos[] = {-player_pos[X], 4.0, -player_pos[Z] - 2.0f, 1.0}; // Spotlight position.
+    
+    //If a teapot is being thrown, allow the spotlight to follow it.
+    if (isThrowTeapotEnabled)
+    {
+        lightPos[X] = teapotToThrowX;
+        lightPos[Y] += thrownTeapotY;
+        lightPos[Z] = thrownTeapotZ;
+    }
     
     //Always point the light downwards.
     float spotDirection[] = {0.0, -1.0, 0.0}; // Spotlight direction.
@@ -303,7 +399,7 @@ void drawScene()
     
     glLoadIdentity();
     
-    //Control camera using user input.
+    //Control camera using user position.
     gluLookAt(-player_pos[X], 4.0, -player_pos[Z] + 6.0f,
               -player_pos[X], -player_pos[Y], -player_pos[Z] - 6.0f, 0.0, 1.0, 0.0);
     
@@ -339,93 +435,96 @@ void resize (int w, int h)
 void keyInputDown(unsigned char key, int x, int y)
 {
     
-        if (key == 'W' || key == 'w') {
-            player_dir &= ~DIR_BACKWARD;
-            player_dir |= DIR_FORWARD;
-        } else if (key == 'S' || key == 's') {
-            player_dir &= ~DIR_FORWARD;
-            player_dir |= DIR_BACKWARD;
-        } else if (key == 'A' || key == 'a') {
-            player_dir &= ~DIR_RIGHT;
-            player_dir |= DIR_LEFT;
-        } else if (key == 'D' || key == 'd') {
-            player_dir &= ~DIR_LEFT;
-            player_dir |= DIR_RIGHT;
-        }
+    if (key == 'W' || key == 'w') {
+        player_dir &= ~DIR_BACKWARD;
+        player_dir |= DIR_FORWARD;
+    } else if (key == 'S' || key == 's') {
+        player_dir &= ~DIR_FORWARD;
+        player_dir |= DIR_BACKWARD;
+    } else if (key == 'A' || key == 'a') {
+        player_dir &= ~DIR_RIGHT;
+        player_dir |= DIR_LEFT;
+    } else if (key == 'D' || key == 'd') {
+        player_dir &= ~DIR_LEFT;
+        player_dir |= DIR_RIGHT;
+    }
     glutPostRedisplay();
 }
 
 // Keyboard up input processing routine.
 void keyInputUp(unsigned char key, int x, int y)
 {
+    if (key == 'W' || key == 'w') {
+        player_dir &= ~DIR_FORWARD;
+    } else if (key == 'S' || key == 's') {
+        player_dir &= ~DIR_BACKWARD;
+    } else if (key == 'A' || key == 'a') {
+        player_dir &= ~DIR_LEFT;
+    } else if (key == 'D' || key == 'd') {
+        player_dir &= ~DIR_RIGHT;
+    }
 
-        if (key == 'W' || key == 'w') {
-            player_dir &= ~DIR_FORWARD;
-        } else if (key == 'S' || key == 's') {
-            player_dir &= ~DIR_BACKWARD;
-        } else if (key == 'A' || key == 'a') {
-            player_dir &= ~DIR_LEFT;
-        } else if (key == 'D' || key == 'd') {
-            player_dir &= ~DIR_RIGHT;
-        }
-    
-        if (key == 't')
+    if (key == 't')
+    {
+        if (!isThrowTeapotEnabled)
         {
             isThrowTeapotEnabled = 1;
+            
+            //Determine which teapot is closest to the user's location.
+            //If the user is not close enough, nothing will happen.
+            if (-player_pos[X] > -7.0f && -player_pos[X] < -3.5f)
+            {
+                teapotToThrowX = -5.0f;
+                
+                if (-player_pos[Z] > 1.62f && -player_pos[Z] < 9.0f)
+                    teapotToThrowZ = 5.0f;
+                else if (-player_pos[Z] > -3.0f && -player_pos[Z] < 0.0f)
+                    teapotToThrowZ = 0.0f;
+                else if (-player_pos[Z] > -7.0f && -player_pos[Z] < -4.2f)
+                    teapotToThrowZ = -5.0f;
+                else
+                    isThrowTeapotEnabled = 0;
+            }
+            else if (-player_pos[X] > -1.75f && -player_pos[X] < 1.75f)
+            {
+                teapotToThrowX = 0.0f;
+                
+                if (-player_pos[Z] > 1.62f && -player_pos[Z] < 9.0f)
+                    teapotToThrowZ = 5.0f;
+                else if (-player_pos[Z] > -3.0f && -player_pos[Z] < 0.0f)
+                    teapotToThrowZ = 0.0f;
+                else if (-player_pos[Z] > -7.0f && -player_pos[Z] < -4.2f)
+                    teapotToThrowZ = -5.0f;
+                else
+                    isThrowTeapotEnabled = 0;
+            }
+            else if (-player_pos[X] > 3.5f && -player_pos[X] < 7.0f)
+            {
+                teapotToThrowX = 5.0f;
+                
+                if (-player_pos[Z] > 1.62f && -player_pos[Z] < 9.0f)
+                    teapotToThrowZ = 5.0f;
+                else if (-player_pos[Z] > -3.0f && -player_pos[Z] < 0.0f)
+                    teapotToThrowZ = 0.0f;
+                else if (-player_pos[Z] > -7.0f && -player_pos[Z] < -4.2f)
+                    teapotToThrowZ = -5.0f;
+                else
+                    isThrowTeapotEnabled = 0;
+            }
+            else
+                isThrowTeapotEnabled = 0;
         }
+    }
     
     glutPostRedisplay();
-}
-
-// Callback routine for non-ASCII key entry.
-void specialKeyInput(int key, int x, int y)
-{
-    if (key == GLUT_KEY_PAGE_DOWN)
-    {
-        spotAngle -= 1.0;
-    }
-    if( key == GLUT_KEY_PAGE_UP)
-    {
-        spotAngle += 1.0;
-    }
-    if (key == GLUT_KEY_UP)
-    {
-        if (zMove >= -2.0) zMove -= 0.2;
-    }
-    if (key == GLUT_KEY_DOWN)
-    {
-        if (zMove <= 9.0) zMove += 0.2;
-    }
-    if (key == GLUT_KEY_LEFT)
-    {
-        xMove -= 0.2;
-    }
-    if (key == GLUT_KEY_RIGHT)
-    {
-        xMove += 0.2;
-    }
-    glutPostRedisplay();
-}
-
-void mouseInput(int x, int y)
-{
-    if (x >= 0 && x <= 500 && y >= 0 && y <= 500)
-    {
-        cout << "X: " << x << ", Y: " << y << endl;
-        player_rot[Y] += x * -1.0;
-        if (player_rot[Y] >= TAU)
-            player_rot[Y] -= TAU;
-        if (player_rot[Y] < 0)
-            player_rot[Y] += TAU;
-        glutPostRedisplay();
-    }
 }
 
 // Routine to output interaction instructions to the C++ window.
 void printInteraction(void)
 {
     cout << "Interaction:" << endl;
-    cout << "Use WASD (W = up, A = left, S = down, D = right) to move the player." << endl;
+    cout << "Use WASD (W = up, A = left, S = down, D = right) to move around the room." << endl;
+    cout << "Press t to throw the teapot that is in front of you." << endl;
 }
 
 // Main routine.
@@ -442,8 +541,6 @@ int main(int argc, char **argv)
     glutReshapeFunc(resize);
     glutKeyboardFunc(keyInputDown);
     glutKeyboardUpFunc(keyInputUp);
-    //glutSpecialFunc(specialKeyInput);
-    //glutPassiveMotionFunc(mouseInput);
     glutTimerFunc(5, animate, 1);
     glutMainLoop();
     
